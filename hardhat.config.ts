@@ -8,16 +8,22 @@ import '@nomiclabs/hardhat-etherscan';
 
 dotenv.config();
 
+const {
+  INFURA_ID,
+  TEST_PRIVATE_KEY,
+  ETHERSCAN_API_KEY,
+} = process.env;
+
 const config: HardhatUserConfig = {
   solidity: '0.7.3',
   networks: {
     rinkeby: {
-      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,
-      accounts: [process.env.TEST_PRIVATE_KEY],
+      url: `https://rinkeby.infura.io/v3/${INFURA_ID}`,
+      accounts: [TEST_PRIVATE_KEY as string],
     },
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: ETHERSCAN_API_KEY,
   },
 };
 

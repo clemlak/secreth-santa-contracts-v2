@@ -9,7 +9,7 @@ async function main() {
   console.log('Deploying contract(s) with account:', deployer.address);
 
   const SecrethSantaV2 = await ethers.getContractFactory('SecrethSantaV2');
-  const secrethSantaV2 = await SecrethSantaV2.deploy(0);
+  const secrethSantaV2 = await SecrethSantaV2.deploy();
 
   console.log('Dexther deployed:', secrethSantaV2.address);
 }
