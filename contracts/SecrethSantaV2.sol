@@ -2,10 +2,7 @@
 pragma solidity 0.7.3;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/introspection/IERC165.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "./IBadERC721.sol";
+import "./IAgnosticToken.sol";
 
 
 contract SecrethSantaV2 is Ownable {
@@ -47,36 +44,6 @@ contract SecrethSantaV2 is Ownable {
     }
   }
 
-  function addPrize(
-    address[] calldata tokens,
-    uint256[] calldata ids
-  ) external {
-    require(
-      tokens.length == ids.length,
-      "Arrays do not match"
-    );
-
-    require(
-      lastPresentAt + prizeDelay > block.timestamp,
-      "Too late"
-    );
-
-    for (uint256 i = 0; i < tokens.length; i += 1) {
-      _transferAssets(
-        msg.sender,
-        address(this),
-        tokens,
-        ids
-      );
-    }
-
-    emit PrizeAdded(
-      msg.sender,
-      tokens,
-      ids
-    );
-  }
-
   function sendPresent(
     address token,
     uint256 id
@@ -106,6 +73,36 @@ contract SecrethSantaV2 is Ownable {
 
     lastPresentAt = block.timestamp;
     lastSanta = msg.sender;
+  }
+
+  function addPrize(
+    address[] calldata tokens,
+    uint256[] calldata ids
+  ) external {
+    require(
+      tokens.length == ids.length,
+      "Arrays do not match"
+    );
+
+    require(
+      lastPresentAt + prizeDelay > block.timestamp,
+      "Too late"
+    );
+
+    for (uint256 i = 0; i < tokens.length; i += 1) {
+      _transferAssets(
+        msg.sender,
+        address(this),
+        tokens,
+        ids
+      );
+    }
+
+    emit PrizeAdded(
+      msg.sender,
+      tokens,
+      ids
+    );
   }
 
   function claimPrize(
@@ -143,22 +140,18 @@ contract SecrethSantaV2 is Ownable {
     uint256[] memory ids
   ) private {
     for (uint256 i = 0; i < tokens.length; i += 1) {
-      IERC165 tokenWithoutInterface = IERC165(tokens[i]);
+      IAgnosticToken token = IAgnosticToken(tokens[i]);
 
-      bool hasERC1155Interface = tokenWithoutInterface.supportsInterface(0xd9b67a26);
+      bool hasERC1155Interface = token.supportsInterface(0xd9b67a26);
 
       if (hasERC1155Interface) {
-        IERC1155 token = IERC1155(tokens[i]);
         bytes memory data;
         token.safeTransferFrom(from, to, ids[i], 1, data);
       } else {
-        IERC721 token = IERC721(tokens[i]);
-
         try token.transferFrom(from, to, ids[i]) {
           // Success
         } catch {
-          IBadERC721 badToken = IBadERC721(tokens[i]);
-          badToken.transfer(to, ids[i]);
+          token.transfer(to, ids[i]);
         }
       }
     }

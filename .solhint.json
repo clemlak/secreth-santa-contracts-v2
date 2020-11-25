@@ -46,7 +46,7 @@
     "no-complex-fallback": "warn",
     "no-simple-event-func-name": "warn",
     "not-rely-on-block-hash": "warn",
-    "not-rely-on-time": "warn",
+    "not-rely-on-time": "off",
     "reentrancy": "warn",
     "state-visibility": "warn",
     "no-inline-assembly": "warn"
