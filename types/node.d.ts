@@ -3,5 +3,6 @@ declare namespace NodeJS {
     TEST_PRIVATE_KEY: string;
     INFURA_ID: string;
     ETHERSCAN_API_KEY: string;
+    RINKEBY_ALCHEMY_KEY: string;
   }
 }
