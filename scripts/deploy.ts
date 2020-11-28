@@ -9,9 +9,9 @@ async function main() {
   console.log('Deploying contract(s) with account:', deployer.address);
 
   const SecrethSantaV2 = await ethers.getContractFactory('SecrethSantaV2');
-  const secrethSantaV2 = await SecrethSantaV2.deploy();
+  const secrethSantaV2 = await SecrethSantaV2.deploy(['0x9f8052dc99582d00a8d7b339cab52fb5409502fb']);
 
-  console.log('Dexther deployed:', secrethSantaV2.address);
+  console.log('SecrethSantaV2 deployed:', secrethSantaV2.address);
 }
 
 main()

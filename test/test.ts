@@ -27,16 +27,11 @@ describe('SecrethSantaV2', () => {
 
   beforeEach(async () => {
     accounts = await ethers.getSigners();
-    secreth = await new SecrethSantaV2__factory(accounts[0]).deploy();
     dummyERC721 = await new DummyERC721__factory(accounts[0]).deploy();
     dummyERC1155 = await new DummyERC1155__factory(accounts[0]).deploy();
 
-    await secreth.updateWhitelist(
-      [
-        dummyERC721.address,
-        dummyERC1155.address,
-      ],
-      true,
+    secreth = await new SecrethSantaV2__factory(accounts[0]).deploy(
+      [dummyERC721.address, dummyERC1155.address],
     );
   });
 

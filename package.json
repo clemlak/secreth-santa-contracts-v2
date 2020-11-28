@@ -2,7 +2,8 @@
   "name": "hardhat-project",
   "scripts": {
     "test": "npx hardhat test",
-    "compile": "npx hardhat compile"
+    "compile": "npx hardhat compile",
+    "deploy-rinkeby": "npx hardhat run ./scripts/deploy.ts --network rinkeby"
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.0",
@@ -17,7 +18,6 @@
     "ethereum-waffle": "^3.2.1",
     "ethers": "^5.0.22",
     "hardhat": "^2.0.3",
-    "hardhat-abi-exporter": "^2.0.6",
     "hardhat-typechain": "^0.3.3",
     "ts-generator": "^0.1.1",
     "ts-node": "^9.0.0",

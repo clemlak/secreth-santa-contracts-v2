@@ -26,9 +26,27 @@ contract SecrethSantaV2 is Ownable {
     uint256[] ids
   );
 
-  constructor() {
+  event WhitelistUpdated(
+    address[] tokens,
+    bool isApproved
+  );
+
+  constructor(
+    address[] memory whitelistedTokens
+  ) {
     lastSanta = msg.sender;
     lastPresentAt = block.timestamp;
+
+    for (uint256 i = 0; i < whitelistedTokens.length; i += 1) {
+      isTokenWhitelisted[whitelistedTokens[i]] = true;
+    }
+
+    if (whitelistedTokens.length > 0) {
+      emit WhitelistUpdated(
+        whitelistedTokens,
+        true
+      );
+    }
   }
 
   function updatePrizeDelay(uint256 newPrizeDelay) external onlyOwner() {
@@ -42,6 +60,11 @@ contract SecrethSantaV2 is Ownable {
     for (uint256 i = 0; i < tokens.length; i += 1) {
       isTokenWhitelisted[tokens[i]] = isApproved;
     }
+
+    emit WhitelistUpdated(
+      tokens,
+      isApproved
+    );
   }
 
   function sendPresent(
