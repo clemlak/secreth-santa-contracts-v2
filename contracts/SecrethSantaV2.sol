@@ -2,14 +2,16 @@
 pragma solidity 0.7.3;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IAgnosticToken.sol";
+import "hardhat/console.sol";
 
 
 contract SecrethSantaV2 is Ownable {
   address public lastSanta;
   uint256 public lastPresentAt;
 
-  uint256 public prizeDelay = 60 * 60 * 24 * 7;
+  uint256 public prizeDelay = 60 * 60 * 24 * 3;
 
   mapping (address => bool) public isTokenWhitelisted;
 
@@ -68,7 +70,7 @@ contract SecrethSantaV2 is Ownable {
   }
 
   function sendPresent(
-    address token,
+    address tokenAddress,
     uint256 id
   ) external {
     require(
@@ -77,21 +79,28 @@ contract SecrethSantaV2 is Ownable {
     );
 
     require(
-      isTokenWhitelisted[token] == true,
+      isTokenWhitelisted[tokenAddress] == true,
       "Token is not whitelisted"
     );
 
     address[] memory tokens = new address[](1);
-    tokens[1] = token;
+    tokens[0] = tokenAddress;
 
     uint256[] memory ids = new uint256[](1);
-    ids[1] = id;
+    ids[0] = id;
 
     _transferAssets(
       msg.sender,
       lastSanta,
       tokens,
       ids
+    );
+
+    emit PresentSent(
+      msg.sender,
+      lastSanta,
+      tokenAddress,
+      id
     );
 
     lastPresentAt = block.timestamp;
