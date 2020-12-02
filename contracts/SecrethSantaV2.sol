@@ -43,16 +43,10 @@ contract SecrethSantaV2 is Ownable {
       isTokenWhitelisted[whitelistedTokens[i]] = true;
     }
 
-    if (whitelistedTokens.length > 0) {
-      emit WhitelistUpdated(
-        whitelistedTokens,
-        true
-      );
-    }
-  }
-
-  function updatePrizeDelay(uint256 newPrizeDelay) external onlyOwner() {
-    prizeDelay = newPrizeDelay;
+    emit WhitelistUpdated(
+      whitelistedTokens,
+      true
+    );
   }
 
   function updateWhitelist(

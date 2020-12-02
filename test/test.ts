@@ -51,6 +51,10 @@ describe('SecrethSantaV2', () => {
     expect(await secrethSanta.owner()).to.equal(await deployer.getAddress());
   });
 
+  it('Should check the last Santa', async () => {
+    expect(await secrethSanta.lastSanta()).to.equal(await deployer.getAddress());
+  });
+
   it('Should check the prize delay', async () => {
     expect(await secrethSanta.prizeDelay()).to.equal(
       prizeDelay,
@@ -134,7 +138,11 @@ describe('SecrethSantaV2', () => {
       true,
     );
 
-    await secrethSanta.connect(alice).addPrize(
+    await expect(secrethSanta.connect(alice).addPrize(
+      [dummyERC721.address],
+      [0],
+    )).to.emit(secrethSanta, 'PrizeAdded').withArgs(
+      await alice.getAddress(),
       [dummyERC721.address],
       [0],
     );
