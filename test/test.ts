@@ -12,6 +12,8 @@ import { expect } from 'chai';
 import {
   SecrethSantaV2,
   SecrethSantaV2__factory,
+  DummyERC20,
+  DummyERC20__factory,
   DummyERC721,
   DummyERC721__factory,
   DummyERC1155,
@@ -29,6 +31,7 @@ const prizeDelay = 60 * 60 * 24;
 describe('SecrethSantaV2', () => {
   let accounts: Signer[];
   let secrethSanta: SecrethSantaV2;
+  let dummyERC20: DummyERC20;
   let dummyERC721: DummyERC721;
   let dummyERC1155: DummyERC1155;
   let deployer: Signer;
@@ -39,6 +42,7 @@ describe('SecrethSantaV2', () => {
     accounts = await ethers.getSigners();
     [deployer, alice, bob] = accounts;
 
+    dummyERC20 = await new DummyERC20__factory(deployer).deploy();
     dummyERC721 = await new DummyERC721__factory(deployer).deploy();
     dummyERC1155 = await new DummyERC1155__factory(deployer).deploy();
     secrethSanta = await new SecrethSantaV2__factory(deployer).deploy(
@@ -149,6 +153,34 @@ describe('SecrethSantaV2', () => {
   });
 
   it('Should add a prize to the pool, send a present, wait for the delay and claim the prize', async () => {
+    await dummyERC20.mint(await deployer.getAddress(), utils.parseEther('10'));
+    await dummyERC20.connect(deployer).approve(
+      secrethSanta.address,
+      utils.parseEther('10'),
+    );
+
+    expect(await dummyERC20.balanceOf(await deployer.getAddress())).to.equal(
+      utils.parseEther('10'),
+      'Balance is wrong',
+    );
+    expect(await dummyERC20.allowance(
+      await deployer.getAddress(),
+      secrethSanta.address,
+    )).to.equal(
+      utils.parseEther('10'),
+      'Allowance is wrong',
+    );
+
+    await secrethSanta.connect(deployer).addPrize(
+      [dummyERC20.address],
+      [utils.parseEther('10')],
+    );
+
+    expect(await dummyERC20.balanceOf(secrethSanta.address)).to.equal(
+      utils.parseEther('10'),
+      'Balance is wrong',
+    );
+
     await dummyERC721.mint(await alice.getAddress(), 0);
     await dummyERC721.connect(alice).setApprovalForAll(
       secrethSanta.address,
@@ -174,10 +206,14 @@ describe('SecrethSantaV2', () => {
     await increaseTime(prizeDelay, ethers.provider);
 
     await secrethSanta.connect(bob).claimPrize(
-      [dummyERC721.address],
-      [0],
+      [dummyERC20.address, dummyERC721.address],
+      [utils.parseEther('10'), 0],
     );
 
+    expect(await dummyERC20.balanceOf(await bob.getAddress())).to.equal(
+      utils.parseEther('10'),
+      'Balance is wrong',
+    );
     expect(await dummyERC721.ownerOf(0)).to.equal(await bob.getAddress(), 'Owner of token 0 is wrong');
   });
 

@@ -15,7 +15,7 @@ const {
 } = process.env;
 
 const config: HardhatUserConfig = {
-  solidity: '0.7.3',
+  solidity: '0.7.5',
   networks: {
     rinkeby: {
       url: `https://eth-rinkeby.alchemyapi.io/v2/${RINKEBY_ALCHEMY_KEY}`,

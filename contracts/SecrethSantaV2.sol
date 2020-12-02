@@ -1,7 +1,10 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.7.3;
+// solhint-disable no-empty-blocks
+
+pragma solidity 0.7.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
 import "./IAgnosticToken.sol";
 
 
@@ -110,11 +113,6 @@ contract SecrethSantaV2 is Ownable {
       "Arrays do not match"
     );
 
-    require(
-      lastPresentAt + prizeDelay > block.timestamp,
-      "Too late"
-    );
-
     for (uint256 i = 0; i < tokens.length; i += 1) {
       _transferAssets(
         msg.sender,
@@ -140,19 +138,12 @@ contract SecrethSantaV2 is Ownable {
       "Not yet"
     );
 
-    require(
-      tokens.length == ids.length,
-      "Arrays do not match"
+    _transferAssets(
+      address(this),
+      lastSanta,
+      tokens,
+      ids
     );
-
-    for (uint256 i = 0; i < tokens.length; i += 1) {
-      _transferAssets(
-        address(this),
-        lastSanta,
-        tokens,
-        ids
-      );
-    }
   }
 
   function isTooLate() external view returns (bool) {
@@ -168,14 +159,10 @@ contract SecrethSantaV2 is Ownable {
     for (uint256 i = 0; i < tokens.length; i += 1) {
       IAgnosticToken token = IAgnosticToken(tokens[i]);
 
-      bool hasERC1155Interface = token.supportsInterface(0xd9b67a26);
-
-      if (hasERC1155Interface) {
-        bytes memory data;
-        token.safeTransferFrom(from, to, ids[i], 1, data);
-      } else {
+      bytes memory data;
+      try token.safeTransferFrom(from, to, ids[i], 1, data) {
+      } catch {
         try token.transferFrom(from, to, ids[i]) {
-          // Success
         } catch {
           token.transfer(to, ids[i]);
         }

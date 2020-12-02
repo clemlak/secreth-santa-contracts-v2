@@ -1,6 +1,8 @@
 import hre from 'hardhat';
 import '@nomiclabs/hardhat-ethers';
 
+import deploymentArguments from '../deploymentArguments';
+
 const { ethers } = hre;
 
 async function main() {
@@ -9,7 +11,7 @@ async function main() {
   console.log('Deploying contract(s) with account:', deployer.address);
 
   const SecrethSantaV2 = await ethers.getContractFactory('SecrethSantaV2');
-  const secrethSantaV2 = await SecrethSantaV2.deploy(['0x9f8052dc99582d00a8d7b339cab52fb5409502fb']);
+  const secrethSantaV2 = await SecrethSantaV2.deploy(...deploymentArguments);
 
   console.log('SecrethSantaV2 deployed:', secrethSantaV2.address);
 }
