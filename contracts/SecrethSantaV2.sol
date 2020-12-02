@@ -11,7 +11,7 @@ contract SecrethSantaV2 is Ownable {
   address public lastSanta;
   uint256 public lastPresentAt;
 
-  uint256 public prizeDelay = 60 * 60 * 24 * 3;
+  uint256 public prizeDelay;
 
   mapping (address => bool) public isTokenWhitelisted;
 
@@ -34,8 +34,10 @@ contract SecrethSantaV2 is Ownable {
   );
 
   constructor(
+    uint256 initialPrizeDelay,
     address[] memory whitelistedTokens
   ) {
+    prizeDelay = initialPrizeDelay;
     lastSanta = msg.sender;
     lastPresentAt = block.timestamp;
 

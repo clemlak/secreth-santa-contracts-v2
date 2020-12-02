@@ -36,6 +36,7 @@ describe('SecrethSantaV2', () => {
     dummyERC721 = await new DummyERC721__factory(deployer).deploy();
     dummyERC1155 = await new DummyERC1155__factory(deployer).deploy();
     secrethSanta = await new SecrethSantaV2__factory(deployer).deploy(
+      60 * 10,
       [dummyERC721.address, dummyERC1155.address],
     );
   });
@@ -46,7 +47,7 @@ describe('SecrethSantaV2', () => {
 
   it('Should check the prize delay', async () => {
     expect(await secrethSanta.prizeDelay()).to.equal(
-      60 * 60 * 24 * 3,
+      60 * 10,
     );
   });
 
