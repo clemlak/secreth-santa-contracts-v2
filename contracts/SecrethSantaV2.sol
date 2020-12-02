@@ -2,9 +2,7 @@
 pragma solidity 0.7.3;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IAgnosticToken.sol";
-import "hardhat/console.sol";
 
 
 contract SecrethSantaV2 is Ownable {
@@ -19,7 +17,7 @@ contract SecrethSantaV2 is Ownable {
     address indexed from,
     address indexed to,
     address indexed token,
-    uint256 tokenId
+    uint256 id
   );
 
   event PrizeAdded(
