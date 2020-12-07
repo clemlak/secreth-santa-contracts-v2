@@ -6,6 +6,7 @@ import '@nomiclabs/hardhat-ethers';
 import {
   Signer,
   utils,
+  Contract,
 } from 'ethers';
 import { expect } from 'chai';
 
@@ -18,14 +19,18 @@ import {
   DummyERC721__factory,
   DummyERC1155,
   DummyERC1155__factory,
+  IERC721__factory,
 } from '../typechain';
 
 import {
   increaseTime,
 } from './utils';
 
-const { ethers } = hre;
+import cryptoKittiesAbi from './cryptoKitties.json';
 
+const { ethers } = hre;
+const cryptoKittiesAddress = '0x06012c8cf97bead5deae237070f9587f8e7a266d';
+const axieInfinityAddress = '0xF5b0A3eFB8e8E4c201e2A935F110eAaF3FFEcb8d';
 const prizeDelay = 60 * 60 * 24;
 
 describe('SecrethSantaV2', () => {
@@ -47,7 +52,7 @@ describe('SecrethSantaV2', () => {
     dummyERC1155 = await new DummyERC1155__factory(deployer).deploy();
     secrethSanta = await new SecrethSantaV2__factory(deployer).deploy(
       prizeDelay,
-      [dummyERC721.address, dummyERC1155.address],
+      [dummyERC721.address, dummyERC1155.address, cryptoKittiesAddress],
     );
   });
 
@@ -269,5 +274,55 @@ describe('SecrethSantaV2', () => {
     expect(await secrethSanta.isTooLate()).to.equal(false, 'Is too late is wrong');
     await increaseTime(prizeDelay, ethers.provider);
     expect(await secrethSanta.isTooLate()).to.equal(true, 'Is too late is wrong');
+  });
+
+  it('Should send a CryptoKitty as a present', async () => {
+    await hre.network.provider.request({
+      method: 'hardhat_impersonateAccount',
+      params: ['0x0532FdcB9805710fb3929Bf043b04226f4dE118B'],
+    });
+
+    const carol = await ethers.provider.getSigner('0x0532FdcB9805710fb3929Bf043b04226f4dE118B');
+    const cryptoKitties = new Contract(cryptoKittiesAddress, cryptoKittiesAbi, carol);
+    await cryptoKitties.approve(secrethSanta.address, '1844260');
+    await secrethSanta.connect(carol).sendPresent(cryptoKittiesAddress, '1844260');
+    expect(await cryptoKitties.ownerOf('1844260')).to.equal(await deployer.getAddress());
+  });
+
+  it('Should add a CryptoKitty and an Axie Infinity into the pool', async () => {
+    const carol = await ethers.provider.getSigner('0x0532FdcB9805710fb3929Bf043b04226f4dE118B');
+    const cryptoKitties = new Contract(cryptoKittiesAddress, cryptoKittiesAbi, carol);
+    await cryptoKitties.approve(secrethSanta.address, '1638418');
+    await secrethSanta.connect(carol).addPrize(
+      [cryptoKittiesAddress],
+      ['1638418'],
+    );
+    expect(await cryptoKitties.ownerOf('1638418')).to.equal(secrethSanta.address, 'CryptoKitty owner should be Secreth Santa');
+
+    await hre.network.provider.request({
+      method: 'hardhat_impersonateAccount',
+      params: ['0x07Af1daf78BA692185D3F0E04a88C80BbD559b0b'],
+    });
+
+    const dave = await ethers.provider.getSigner('0x07Af1daf78BA692185D3F0E04a88C80BbD559b0b');
+    const axieInfinity = IERC721__factory.connect(axieInfinityAddress, dave);
+    await axieInfinity.approve(secrethSanta.address, '62976');
+
+    expect(await axieInfinity.ownerOf('62976')).to.equal(await dave.getAddress(), 'Axie Infinity owner should be Dave');
+
+    await secrethSanta.connect(dave).addPrize(
+      [axieInfinityAddress],
+      ['62976'],
+    );
+    expect(await axieInfinity.ownerOf('62976')).to.equal(secrethSanta.address, 'Axie Infinity owner should be Secreth Santa');
+
+    await increaseTime(prizeDelay, ethers.provider);
+    await secrethSanta.connect(deployer).claimPrize(
+      [axieInfinityAddress, cryptoKittiesAddress],
+      ['62976', '1638418'],
+    );
+
+    expect(await cryptoKitties.ownerOf('1638418')).to.equal(await deployer.getAddress(), 'CryptoKitty owner should be deployer');
+    // expect(await axieInfinity.ownerOf('62976')).to.equal(await deployer.getAddress(), 'Axie Infinity  owner should be deployer');
   });
 });

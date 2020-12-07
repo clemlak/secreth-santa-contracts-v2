@@ -12,11 +12,18 @@ const {
   TEST_PRIVATE_KEY,
   ETHERSCAN_API_KEY,
   RINKEBY_ALCHEMY_KEY,
+  MAINNET_ALCHEMY_KEY,
 } = process.env;
 
 const config: HardhatUserConfig = {
   solidity: '0.7.5',
   networks: {
+    hardhat: {
+      forking: {
+        url: `https://eth-mainnet.alchemyapi.io/v2/${MAINNET_ALCHEMY_KEY}`,
+        blockNumber: 11405328,
+      },
+    },
     rinkeby: {
       url: `https://eth-rinkeby.alchemyapi.io/v2/${RINKEBY_ALCHEMY_KEY}`,
       accounts: [TEST_PRIVATE_KEY],

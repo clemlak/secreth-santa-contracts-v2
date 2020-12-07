@@ -1,6 +1,10 @@
 import hre from 'hardhat';
 import '@nomiclabs/hardhat-ethers';
 
+import {
+ SecrethSantaV2__factory,
+} from '../typechain';
+
 import deploymentArguments from '../deploymentArguments';
 
 const { ethers } = hre;

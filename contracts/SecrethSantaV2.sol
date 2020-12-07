@@ -113,14 +113,12 @@ contract SecrethSantaV2 is Ownable {
       "Arrays do not match"
     );
 
-    for (uint256 i = 0; i < tokens.length; i += 1) {
-      _transferAssets(
-        msg.sender,
-        address(this),
-        tokens,
-        ids
-      );
-    }
+    _transferAssets(
+      msg.sender,
+      address(this),
+      tokens,
+      ids
+    );
 
     emit PrizeAdded(
       msg.sender,
@@ -161,10 +159,19 @@ contract SecrethSantaV2 is Ownable {
 
       bytes memory data;
       try token.safeTransferFrom(from, to, ids[i], 1, data) {
+        console.log("Used safeTransferFrom");
       } catch {
+        console.log("safeTransferFrom failed");
         try token.transferFrom(from, to, ids[i]) {
+          console.log("Used transferFrom");
         } catch {
-          token.transfer(to, ids[i]);
+          console.log("transferFrom failed");
+          try token.transfer(to, ids[i]) {
+            console.log("Used transfer");
+          } catch {
+            console.log("transfer failed");
+            revert("Transfer failed");
+          }
         }
       }
     }
