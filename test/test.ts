@@ -327,7 +327,6 @@ describe('SecrethSantaV2', () => {
 
     expect(await axieInfinity.ownerOf(axieId)).to.equal(await deployer.getAddress(), 'Axie Infinity  owner should be deployer');
 
-    await increaseTime(prizeDelay, ethers.provider);
     await secrethSanta.connect(deployer).savePrize(
       [cryptoKittiesAddress],
       [kittyId],
