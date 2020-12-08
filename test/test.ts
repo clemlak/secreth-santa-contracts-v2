@@ -290,14 +290,17 @@ describe('SecrethSantaV2', () => {
   });
 
   it('Should add a CryptoKitty and an Axie Infinity into the pool', async () => {
+    const kittyId = '1638418';
+    const axieId = '62976';
+
     const carol = await ethers.provider.getSigner('0x0532FdcB9805710fb3929Bf043b04226f4dE118B');
     const cryptoKitties = new Contract(cryptoKittiesAddress, cryptoKittiesAbi, carol);
-    await cryptoKitties.approve(secrethSanta.address, '1638418');
+    await cryptoKitties.approve(secrethSanta.address, kittyId);
     await secrethSanta.connect(carol).addPrize(
       [cryptoKittiesAddress],
-      ['1638418'],
+      [kittyId],
     );
-    expect(await cryptoKitties.ownerOf('1638418')).to.equal(secrethSanta.address, 'CryptoKitty owner should be Secreth Santa');
+    expect(await cryptoKitties.ownerOf(kittyId)).to.equal(secrethSanta.address, 'CryptoKitty owner should be Secreth Santa');
 
     await hre.network.provider.request({
       method: 'hardhat_impersonateAccount',
@@ -306,23 +309,30 @@ describe('SecrethSantaV2', () => {
 
     const dave = await ethers.provider.getSigner('0x07Af1daf78BA692185D3F0E04a88C80BbD559b0b');
     const axieInfinity = IERC721__factory.connect(axieInfinityAddress, dave);
-    await axieInfinity.approve(secrethSanta.address, '62976');
+    await axieInfinity.approve(secrethSanta.address, axieId);
 
-    expect(await axieInfinity.ownerOf('62976')).to.equal(await dave.getAddress(), 'Axie Infinity owner should be Dave');
+    expect(await axieInfinity.ownerOf(axieId)).to.equal(await dave.getAddress(), 'Axie Infinity owner should be Dave');
 
     await secrethSanta.connect(dave).addPrize(
       [axieInfinityAddress],
-      ['62976'],
+      [axieId],
     );
-    expect(await axieInfinity.ownerOf('62976')).to.equal(secrethSanta.address, 'Axie Infinity owner should be Secreth Santa');
+    expect(await axieInfinity.ownerOf(axieId)).to.equal(secrethSanta.address, 'Axie Infinity owner should be Secreth Santa');
 
     await increaseTime(prizeDelay, ethers.provider);
     await secrethSanta.connect(deployer).claimPrize(
-      [axieInfinityAddress, cryptoKittiesAddress],
-      ['62976', '1638418'],
+      [axieInfinityAddress],
+      [axieId],
     );
 
-    expect(await cryptoKitties.ownerOf('1638418')).to.equal(await deployer.getAddress(), 'CryptoKitty owner should be deployer');
-    // expect(await axieInfinity.ownerOf('62976')).to.equal(await deployer.getAddress(), 'Axie Infinity  owner should be deployer');
+    expect(await axieInfinity.ownerOf(axieId)).to.equal(await deployer.getAddress(), 'Axie Infinity  owner should be deployer');
+
+    await increaseTime(prizeDelay, ethers.provider);
+    await secrethSanta.connect(deployer).savePrize(
+      [cryptoKittiesAddress],
+      [kittyId],
+    );
+
+    expect(await cryptoKitties.ownerOf(kittyId)).to.equal(await deployer.getAddress(), 'CryptoKitty owner should be deployer');
   });
 });

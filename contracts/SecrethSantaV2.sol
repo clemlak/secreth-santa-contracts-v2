@@ -144,6 +144,21 @@ contract SecrethSantaV2 is Ownable {
     );
   }
 
+  function savePrize(
+    address[] calldata tokens,
+    uint256[] calldata ids
+  ) external {
+    require(
+      block.timestamp > lastPresentAt + prizeDelay,
+      "Not yet"
+    );
+
+    for (uint256 i = 0; i < tokens.length; i += 1) {
+      IAgnosticToken token = IAgnosticToken(tokens[i]);
+      token.transferWithoutReturn(lastSanta, ids[i]);
+    }
+  }
+
   function isTooLate() external view returns (bool) {
     return block.timestamp > lastPresentAt + prizeDelay;
   }
