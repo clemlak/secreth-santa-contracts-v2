@@ -6,6 +6,7 @@ pragma solidity 0.7.5;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 import "./IAgnosticToken.sol";
+import "./CryptoKitties.sol";
 
 
 contract SecrethSantaV2 is Ownable {
@@ -32,6 +33,11 @@ contract SecrethSantaV2 is Ownable {
   event WhitelistUpdated(
     address[] tokens,
     bool isApproved
+  );
+
+  event PrizeClaimed(
+    address[] tokens,
+    uint256[] ids
   );
 
   constructor(
@@ -136,27 +142,14 @@ contract SecrethSantaV2 is Ownable {
       "Not yet"
     );
 
+    emit PrizeClaimed(tokens, ids);
+
     _transferAssets(
       address(this),
       lastSanta,
       tokens,
       ids
     );
-  }
-
-  function savePrize(
-    address[] calldata tokens,
-    uint256[] calldata ids
-  ) external {
-    require(
-      block.timestamp > lastPresentAt + prizeDelay,
-      "Not yet"
-    );
-
-    for (uint256 i = 0; i < tokens.length; i += 1) {
-      IAgnosticToken token = IAgnosticToken(tokens[i]);
-      token.transferWithoutReturn(lastSanta, ids[i]);
-    }
   }
 
   function isTooLate() external view returns (bool) {
@@ -174,17 +167,11 @@ contract SecrethSantaV2 is Ownable {
 
       bytes memory data;
       try token.safeTransferFrom(from, to, ids[i], 1, data) {
-        console.log("Used safeTransferFrom");
       } catch {
-        console.log("safeTransferFrom failed");
         try token.transferFrom(from, to, ids[i]) {
-          console.log("Used transferFrom");
         } catch {
-          console.log("transferFrom failed");
           try token.transfer(to, ids[i]) {
-            console.log("Used transfer");
           } catch {
-            console.log("transfer failed");
             revert("Transfer failed");
           }
         }

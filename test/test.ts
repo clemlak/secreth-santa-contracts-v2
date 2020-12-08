@@ -321,17 +321,11 @@ describe('SecrethSantaV2', () => {
 
     await increaseTime(prizeDelay, ethers.provider);
     await secrethSanta.connect(deployer).claimPrize(
-      [axieInfinityAddress],
-      [axieId],
+      [axieInfinityAddress, cryptoKittiesAddress],
+      [axieId, kittyId],
     );
 
     expect(await axieInfinity.ownerOf(axieId)).to.equal(await deployer.getAddress(), 'Axie Infinity  owner should be deployer');
-
-    await secrethSanta.connect(deployer).savePrize(
-      [cryptoKittiesAddress],
-      [kittyId],
-    );
-
     expect(await cryptoKitties.ownerOf(kittyId)).to.equal(await deployer.getAddress(), 'CryptoKitty owner should be deployer');
   });
 });
