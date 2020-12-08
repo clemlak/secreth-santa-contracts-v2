@@ -1,12 +1,9 @@
 //SPDX-License-Identifier: MIT
-// solhint-disable no-empty-blocks
-
 pragma solidity 0.7.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 import "./IAgnosticToken.sol";
-import "./CryptoKitties.sol";
 
 
 contract SecrethSantaV2 is Ownable {

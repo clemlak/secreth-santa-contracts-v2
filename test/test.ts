@@ -20,17 +20,19 @@ import {
   DummyERC1155,
   DummyERC1155__factory,
   IERC721__factory,
+  IERC1155__factory,
 } from '../typechain';
 
 import {
   increaseTime,
 } from './utils';
 
-import cryptoKittiesAbi from './cryptoKitties.json';
-
 const { ethers } = hre;
+
 const cryptoKittiesAddress = '0x06012c8cf97bead5deae237070f9587f8e7a266d';
 const axieInfinityAddress = '0xF5b0A3eFB8e8E4c201e2A935F110eAaF3FFEcb8d';
+const cryptoVoxelsWearablesAddress = '0xa58b5224e2FD94020cb2837231B2B0E4247301A6';
+
 const prizeDelay = 60 * 60 * 24;
 
 describe('SecrethSantaV2', () => {
@@ -52,7 +54,13 @@ describe('SecrethSantaV2', () => {
     dummyERC1155 = await new DummyERC1155__factory(deployer).deploy();
     secrethSanta = await new SecrethSantaV2__factory(deployer).deploy(
       prizeDelay,
-      [dummyERC721.address, dummyERC1155.address, cryptoKittiesAddress],
+      [
+        dummyERC721.address,
+        dummyERC1155.address,
+        cryptoKittiesAddress,
+        axieInfinityAddress,
+        cryptoVoxelsWearablesAddress,
+      ],
     );
   });
 
@@ -283,29 +291,48 @@ describe('SecrethSantaV2', () => {
     });
 
     const carol = await ethers.provider.getSigner('0x0532FdcB9805710fb3929Bf043b04226f4dE118B');
-    const cryptoKitties = new Contract(cryptoKittiesAddress, cryptoKittiesAbi, carol);
+    const cryptoKitties = IERC721__factory.connect(cryptoKittiesAddress, carol);
     await cryptoKitties.approve(secrethSanta.address, '1844260');
     await secrethSanta.connect(carol).sendPresent(cryptoKittiesAddress, '1844260');
     expect(await cryptoKitties.ownerOf('1844260')).to.equal(await deployer.getAddress());
   });
 
-  it('Should add a CryptoKitty and an Axie Infinity into the pool', async () => {
+  it('Should send a CryptoVoxelsWearable as a present', async () => {
+    await hre.network.provider.request({
+      method: 'hardhat_impersonateAccount',
+      params: ['0xaD378a8D84440FA47DCE1d6c110E95C22b419e7c'],
+    });
+
+    const wearableId = '2684';
+    const carol = await ethers.provider.getSigner('0xaD378a8D84440FA47DCE1d6c110E95C22b419e7c');
+    const cryptoVoxelsWearables = IERC1155__factory.connect(cryptoVoxelsWearablesAddress, carol);
+    await cryptoVoxelsWearables.setApprovalForAll(secrethSanta.address, true);
+    await secrethSanta.connect(carol).sendPresent(cryptoVoxelsWearablesAddress, wearableId);
+    expect(await cryptoVoxelsWearables.balanceOf(await deployer.getAddress(), wearableId)).to.equal(1, 'Wearable balance is wrong');
+  });
+
+  it('Should add a bunch of presents into the pool and claim them', async () => {
+    await hre.network.provider.request({
+      method: 'hardhat_impersonateAccount',
+      params: ['0xe43ef281a678dda69aeea25894475301905cac7d'],
+    });
+
+    await hre.network.provider.request({
+      method: 'hardhat_impersonateAccount',
+      params: ['0x07Af1daf78BA692185D3F0E04a88C80BbD559b0b'],
+    });
+
     const kittyId = '1638418';
     const axieId = '62976';
 
     const carol = await ethers.provider.getSigner('0x0532FdcB9805710fb3929Bf043b04226f4dE118B');
-    const cryptoKitties = new Contract(cryptoKittiesAddress, cryptoKittiesAbi, carol);
+    const cryptoKitties = IERC721__factory.connect(cryptoKittiesAddress, carol);
     await cryptoKitties.approve(secrethSanta.address, kittyId);
     await secrethSanta.connect(carol).addPrize(
       [cryptoKittiesAddress],
       [kittyId],
     );
     expect(await cryptoKitties.ownerOf(kittyId)).to.equal(secrethSanta.address, 'CryptoKitty owner should be Secreth Santa');
-
-    await hre.network.provider.request({
-      method: 'hardhat_impersonateAccount',
-      params: ['0x07Af1daf78BA692185D3F0E04a88C80BbD559b0b'],
-    });
 
     const dave = await ethers.provider.getSigner('0x07Af1daf78BA692185D3F0E04a88C80BbD559b0b');
     const axieInfinity = IERC721__factory.connect(axieInfinityAddress, dave);
@@ -319,6 +346,14 @@ describe('SecrethSantaV2', () => {
     );
     expect(await axieInfinity.ownerOf(axieId)).to.equal(secrethSanta.address, 'Axie Infinity owner should be Secreth Santa');
 
+    const wearableId = '1620';
+    const elvis = await ethers.provider.getSigner('0xe43ef281a678dda69aeea25894475301905cac7d');
+    const cryptoVoxelsWearables = IERC1155__factory.connect(cryptoVoxelsWearablesAddress, elvis);
+    expect(await cryptoVoxelsWearables.balanceOf(await elvis.getAddress(), wearableId)).to.equal(1, 'Wearable balance is wrong');
+    await cryptoVoxelsWearables.setApprovalForAll(secrethSanta.address, true);
+    await secrethSanta.connect(elvis).addPrize([cryptoVoxelsWearablesAddress], [wearableId]);
+    // expect(await cryptoVoxelsWearables.balanceOf(secrethSanta.address, wearableId)).to.equal(1, 'Wearable balance is wrong');
+
     await increaseTime(prizeDelay, ethers.provider);
     await secrethSanta.connect(deployer).claimPrize(
       [axieInfinityAddress, cryptoKittiesAddress],
@@ -327,5 +362,6 @@ describe('SecrethSantaV2', () => {
 
     expect(await axieInfinity.ownerOf(axieId)).to.equal(await deployer.getAddress(), 'Axie Infinity  owner should be deployer');
     expect(await cryptoKitties.ownerOf(kittyId)).to.equal(await deployer.getAddress(), 'CryptoKitty owner should be deployer');
+    // expect(await cryptoVoxelsWearables.balanceOf(await deployer.getAddress(), wearableId)).to.equal(1, 'Wearable balance is wrong');
   });
 });

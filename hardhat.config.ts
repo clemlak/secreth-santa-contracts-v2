@@ -21,7 +21,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/${MAINNET_ALCHEMY_KEY}`,
-        blockNumber: 11405328,
+        blockNumber: 11413612,
       },
     },
     rinkeby: {
@@ -31,6 +31,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
+  },
+  mocha: {
+    timeout: '30s',
   },
 };
 
