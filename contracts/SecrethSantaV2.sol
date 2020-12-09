@@ -3,6 +3,7 @@ pragma solidity 0.7.5;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155Holder.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "hardhat/console.sol";
 import "./IAgnosticToken.sol";
 
@@ -148,6 +149,23 @@ contract SecrethSantaV2 is Ownable, ERC1155Holder {
       tokens,
       ids
     );
+  }
+
+  function claimERC20Prize(
+    address[] calldata tokens,
+    uint256[] calldata amounts
+  ) external {
+    require(
+      block.timestamp > lastPresentAt + prizeDelay,
+      "Not yet"
+    );
+
+    emit PrizeClaimed(tokens, amounts);
+
+    for (uint256 i = 0; i < tokens.length; i += 1) {
+      IERC20 token = IERC20(tokens[i]);
+      require(token.transfer(lastSanta, amounts[i]), "ERC20 transfer failed");
+    }
   }
 
   function isTooLate() external view returns (bool) {

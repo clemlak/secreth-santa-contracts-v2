@@ -6,7 +6,6 @@ import '@nomiclabs/hardhat-ethers';
 import {
   Signer,
   utils,
-  Contract,
 } from 'ethers';
 import { expect } from 'chai';
 
@@ -21,6 +20,7 @@ import {
   DummyERC1155__factory,
   IERC721__factory,
   IERC1155__factory,
+  IERC20__factory,
 } from '../typechain';
 
 import {
@@ -32,6 +32,7 @@ const { ethers } = hre;
 const cryptoKittiesAddress = '0x06012c8cf97bead5deae237070f9587f8e7a266d';
 const axieInfinityAddress = '0xF5b0A3eFB8e8E4c201e2A935F110eAaF3FFEcb8d';
 const cryptoVoxelsWearablesAddress = '0xa58b5224e2FD94020cb2837231B2B0E4247301A6';
+const manaAddress = '0x0f5d2fb29fb7d3cfee444a200298f468908cc942';
 
 const prizeDelay = 60 * 60 * 24;
 
@@ -352,16 +353,36 @@ describe('SecrethSantaV2', () => {
     expect(await cryptoVoxelsWearables.balanceOf(await elvis.getAddress(), wearableId)).to.equal(1, 'Wearable balance is wrong');
     await cryptoVoxelsWearables.setApprovalForAll(secrethSanta.address, true);
     await secrethSanta.connect(elvis).addPrize([cryptoVoxelsWearablesAddress], [wearableId]);
-    // expect(await cryptoVoxelsWearables.balanceOf(secrethSanta.address, wearableId)).to.equal(1, 'Wearable balance is wrong');
+    expect(await cryptoVoxelsWearables.balanceOf(secrethSanta.address, wearableId)).to.equal(1, 'Wearable balance is wrong');
+
+    const manaAmount = utils.parseEther('800');
+
+    await hre.network.provider.request({
+      method: 'hardhat_impersonateAccount',
+      params: ['0x7D714a30B7f7f688Dfa81F4f1D8Bf605CCD083a7'],
+    });
+
+    const fabrice = await ethers.provider.getSigner('0x7D714a30B7f7f688Dfa81F4f1D8Bf605CCD083a7');
+    const mana = IERC20__factory.connect(manaAddress, fabrice);
+    await mana.approve(secrethSanta.address, manaAmount);
+    expect(await mana.balanceOf(await fabrice.getAddress())).to.eq(manaAmount, 'Mana amount is wrong');
+    await secrethSanta.connect(fabrice).addPrize([manaAddress], [manaAmount]);
+    expect(await mana.balanceOf(secrethSanta.address)).to.eq(manaAmount, 'Mana amount is wrong');
 
     await increaseTime(prizeDelay, ethers.provider);
     await secrethSanta.connect(deployer).claimPrize(
-      [axieInfinityAddress, cryptoKittiesAddress],
-      [axieId, kittyId],
+      [axieInfinityAddress, cryptoKittiesAddress, cryptoVoxelsWearablesAddress],
+      [axieId, kittyId, wearableId],
+    );
+
+    await secrethSanta.connect(deployer).claimERC20Prize(
+      [manaAddress],
+      [manaAmount],
     );
 
     expect(await axieInfinity.ownerOf(axieId)).to.equal(await deployer.getAddress(), 'Axie Infinity  owner should be deployer');
     expect(await cryptoKitties.ownerOf(kittyId)).to.equal(await deployer.getAddress(), 'CryptoKitty owner should be deployer');
-    // expect(await cryptoVoxelsWearables.balanceOf(await deployer.getAddress(), wearableId)).to.equal(1, 'Wearable balance is wrong');
+    expect(await cryptoVoxelsWearables.balanceOf(await deployer.getAddress(), wearableId)).to.equal(1, 'Wearable balance is wrong');
+    expect(await mana.balanceOf(await deployer.getAddress())).to.eq(manaAmount, 'Mana amount is wrong');
   });
 });
