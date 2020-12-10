@@ -97,6 +97,7 @@ describe('SecrethSantaV2', () => {
     );
 
     expect(await dummyERC721.ownerOf(0)).to.equal(await deployer.getAddress());
+    expect(await secrethSanta.lastSanta()).to.equal(await alice.getAddress());
   });
 
   it('Should send an ERC1155 present', async () => {
@@ -147,6 +148,35 @@ describe('SecrethSantaV2', () => {
     );
 
     expect(await dummyERC721.ownerOf(1)).to.equal(await alice.getAddress());
+  });
+
+  it('Should NOT send a second present after the end', async () => {
+    await dummyERC721.mint(await alice.getAddress(), 0);
+    await dummyERC721.mint(await bob.getAddress(), 1);
+    await dummyERC721.connect(alice).setApprovalForAll(
+      secrethSanta.address,
+      true,
+    );
+
+    await dummyERC721.connect(bob).setApprovalForAll(
+      secrethSanta.address,
+      true,
+    );
+
+    await secrethSanta.connect(alice).sendPresent(
+      dummyERC721.address,
+      0,
+    );
+
+    expect(await secrethSanta.lastSanta()).to.equal(await alice.getAddress());
+    await expect(await dummyERC721.ownerOf(0)).to.equal(await deployer.getAddress());
+
+    await increaseTime(prizeDelay, ethers.provider);
+
+    await expect(secrethSanta.connect(bob).sendPresent(
+      dummyERC721.address,
+      1,
+    )).to.revertedWith('Too late');
   });
 
   it('Should add a prize to the pool', async () => {
