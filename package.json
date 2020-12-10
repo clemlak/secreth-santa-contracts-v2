@@ -3,7 +3,8 @@
   "scripts": {
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
-    "deploy-rinkeby": "npx hardhat run ./scripts/deploy.ts --network rinkeby"
+    "deploy-rinkeby": "npx hardhat run ./scripts/deploy.ts --network rinkeby",
+    "deploy-mainnet": "npx hardhat run ./scripts/deploy.ts --network mainnet"
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.0",
