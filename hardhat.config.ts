@@ -13,6 +13,7 @@ const {
   ETHERSCAN_API_KEY,
   RINKEBY_ALCHEMY_KEY,
   MAINNET_ALCHEMY_KEY,
+  WALLET_PRIVATE_KEY,
 } = process.env;
 
 const config: HardhatUserConfig = {
@@ -27,6 +28,10 @@ const config: HardhatUserConfig = {
     rinkeby: {
       url: `https://eth-rinkeby.alchemyapi.io/v2/${RINKEBY_ALCHEMY_KEY}`,
       accounts: [TEST_PRIVATE_KEY],
+    },
+    mainnet: {
+      url: `https://eth-mainnet.alchemyapi.io/v2/${MAINNET_ALCHEMY_KEY}`,
+      accounts: [WALLET_PRIVATE_KEY],
     },
   },
   etherscan: {
